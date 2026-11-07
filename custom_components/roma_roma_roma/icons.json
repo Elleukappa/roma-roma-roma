@@ -1,0 +1,7 @@
+{
+  "services": {
+    "start_show": { "service": "mdi:party-popper" },
+    "stop_show": { "service": "mdi:stop-circle" },
+    "test_notification": { "service": "mdi:bell-ring" }
+  }
+}

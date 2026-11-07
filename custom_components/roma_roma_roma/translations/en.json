@@ -1,0 +1,156 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ROMA ROMA ROMA – Red and yellow lights",
+        "description": "Choose the lights that will be RED and the ones that will be YELLOW during the anthem (colors are fixed). If the lamps are powered by a smart plug, select it: it will be switched on before the show.",
+        "data": {
+          "red_lights": "Red lights",
+          "yellow_lights": "Yellow lights",
+          "power_entities": "Plugs/switches to turn on first",
+          "min_brightness": "Minimum brightness",
+          "max_brightness": "Maximum brightness"
+        },
+        "data_description": {
+          "power_entities": "Optional: e.g. the smart plug powering the lamps.",
+          "min_brightness": "Light level in the quietest parts of the song.",
+          "max_brightness": "Light level on the strongest hits of the chorus."
+        }
+      },
+      "media": {
+        "title": "ROMA ROMA ROMA – Song",
+        "description": "The song is fixed: \"Antonello Venditti - Roma Roma Roma\". For copyright reasons the file is not included: upload it in Media → Local media named \"Antonello Venditti - Roma Roma Roma.mp3\" (or enter your own media-source path here).",
+        "data": {
+          "media_players": "Speakers/players for the anthem",
+          "song_media_id": "Song file (media-source)",
+          "sync_offset": "Audio delay compensation"
+        },
+        "data_description": {
+          "media_players": "Optional: without players only the light show runs.",
+          "sync_offset": "If the lights lag behind the music increase this value, if they are ahead decrease it."
+        }
+      },
+      "alerts": {
+        "title": "ROMA ROMA ROMA – Alerts and presence",
+        "description": "The AS Roma calendar (league and cups) updates automatically.",
+        "data": {
+          "notify_devices": "Phones to notify (Home Assistant app)",
+          "notify_minutes": "Alert: minutes before kick-off",
+          "show_minutes": "Show: minutes before kick-off",
+          "persons": "People living in the house",
+          "presence_mode": "When to start the show",
+          "serie_a_only": "Serie A matches only"
+        },
+        "data_description": {
+          "persons": "Optional: if empty the show always starts."
+        }
+      }
+    },
+    "error": {
+      "no_lights": "Select at least one red or yellow light.",
+      "brightness_range": "Minimum brightness must be lower than maximum brightness."
+    },
+    "abort": {
+      "single_instance_allowed": "ROMA ROMA ROMA is already configured.",
+      "already_configured": "ROMA ROMA ROMA is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ROMA ROMA ROMA – Red and yellow lights",
+        "description": "Choose the lights that will be RED and the ones that will be YELLOW during the anthem (colors are fixed).",
+        "data": {
+          "red_lights": "Red lights",
+          "yellow_lights": "Yellow lights",
+          "power_entities": "Plugs/switches to turn on first",
+          "min_brightness": "Minimum brightness",
+          "max_brightness": "Maximum brightness"
+        }
+      },
+      "media": {
+        "title": "ROMA ROMA ROMA – Song",
+        "description": "Fixed song: \"Antonello Venditti - Roma Roma Roma\" (upload the file to Local media).",
+        "data": {
+          "media_players": "Speakers/players for the anthem",
+          "song_media_id": "Song file (media-source)",
+          "sync_offset": "Audio delay compensation"
+        },
+        "data_description": {
+          "sync_offset": "If the lights lag behind the music increase this value, if they are ahead decrease it."
+        }
+      },
+      "alerts": {
+        "title": "ROMA ROMA ROMA – Alerts and presence",
+        "data": {
+          "notify_devices": "Phones to notify (Home Assistant app)",
+          "notify_minutes": "Alert: minutes before kick-off",
+          "show_minutes": "Show: minutes before kick-off",
+          "persons": "People living in the house",
+          "presence_mode": "When to start the show",
+          "serie_a_only": "Serie A matches only"
+        }
+      }
+    },
+    "error": {
+      "no_lights": "Select at least one red or yellow light.",
+      "brightness_range": "Minimum brightness must be lower than maximum brightness."
+    }
+  },
+  "selector": {
+    "presence_mode": {
+      "options": {
+        "home": "Only if someone is home",
+        "home_or_unknown": "If someone is home or location is unknown",
+        "always": "Always"
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "matches": { "name": "Matches" }
+    },
+    "sensor": {
+      "next_match": { "name": "Next match" },
+      "next_show": { "name": "Next show" }
+    },
+    "switch": {
+      "notify_enabled": { "name": "Phone alert" },
+      "show_enabled": { "name": "Light show and anthem" }
+    },
+    "button": {
+      "start_show": { "name": "Start show now" },
+      "stop_show": { "name": "Stop show" },
+      "test_notification": { "name": "Test notification" }
+    }
+  },
+  "services": {
+    "start_show": {
+      "name": "Start show",
+      "description": "Plays the red and yellow light show in time with Roma Roma Roma.",
+      "fields": {
+        "play_song": {
+          "name": "Play the song",
+          "description": "Also plays the song on the configured players."
+        },
+        "offset": {
+          "name": "Compensation (s)",
+          "description": "Seconds of the song already elapsed when the lights start."
+        }
+      }
+    },
+    "stop_show": {
+      "name": "Stop show",
+      "description": "Stops the running light show."
+    },
+    "test_notification": {
+      "name": "Test notification",
+      "description": "Sends the date of the next match to the configured phones."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "ROMA ROMA ROMA is not configured or not loaded."
+    }
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ROMA ROMA ROMA – Luci giallorosse",
+        "description": "Scegli le luci che durante l'inno saranno ROSSE e quelle GIALLE (i colori sono fissi). Se le lampade sono alimentate da una presa smart, indicala: verrà accesa prima dello spettacolo.",
+        "data": {
+          "red_lights": "Luci rosse",
+          "yellow_lights": "Luci gialle",
+          "power_entities": "Prese/interruttori da accendere prima",
+          "min_brightness": "Luminosità minima",
+          "max_brightness": "Luminosità massima"
+        },
+        "data_description": {
+          "power_entities": "Facoltativo: es. la presa smart che alimenta le lampade.",
+          "min_brightness": "Livello delle luci nei momenti più calmi della canzone.",
+          "max_brightness": "Livello sui colpi più forti dei ritornelli."
+        }
+      },
+      "media": {
+        "title": "ROMA ROMA ROMA – Canzone",
+        "description": "La canzone è fissa: \"Antonello Venditti - Roma Roma Roma\". Per motivi di diritto d'autore il file non è incluso: caricalo in Media → Media locali con il nome \"Antonello Venditti - Roma Roma Roma.mp3\" (oppure indica qui il tuo percorso media-source).",
+        "data": {
+          "media_players": "Altoparlanti/lettori dove suonare l'inno",
+          "song_media_id": "File della canzone (media-source)",
+          "sync_offset": "Compensazione ritardo audio"
+        },
+        "data_description": {
+          "media_players": "Facoltativo: senza lettori parte solo lo spettacolo di luci.",
+          "sync_offset": "Se le luci sono in ritardo rispetto alla musica aumenta il valore, se sono in anticipo diminuiscilo."
+        }
+      },
+      "alerts": {
+        "title": "ROMA ROMA ROMA – Avvisi e presenza",
+        "description": "Il calendario dell'AS Roma (campionato e coppe) si aggiorna da solo.",
+        "data": {
+          "notify_devices": "Telefoni da avvisare (app Home Assistant)",
+          "notify_minutes": "Avviso: minuti prima della partita",
+          "show_minutes": "Spettacolo: minuti prima della partita",
+          "persons": "Persone di casa",
+          "presence_mode": "Quando avviare lo spettacolo",
+          "serie_a_only": "Solo partite di Serie A"
+        },
+        "data_description": {
+          "persons": "Facoltativo: se vuoto lo spettacolo parte sempre."
+        }
+      }
+    },
+    "error": {
+      "no_lights": "Scegli almeno una luce rossa o gialla.",
+      "brightness_range": "La luminosità minima deve essere inferiore alla massima."
+    },
+    "abort": {
+      "single_instance_allowed": "ROMA ROMA ROMA è già configurata.",
+      "already_configured": "ROMA ROMA ROMA è già configurata."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "ROMA ROMA ROMA – Luci giallorosse",
+        "description": "Scegli le luci che durante l'inno saranno ROSSE e quelle GIALLE (i colori sono fissi).",
+        "data": {
+          "red_lights": "Luci rosse",
+          "yellow_lights": "Luci gialle",
+          "power_entities": "Prese/interruttori da accendere prima",
+          "min_brightness": "Luminosità minima",
+          "max_brightness": "Luminosità massima"
+        }
+      },
+      "media": {
+        "title": "ROMA ROMA ROMA – Canzone",
+        "description": "Canzone fissa: \"Antonello Venditti - Roma Roma Roma\" (file da caricare in Media locali).",
+        "data": {
+          "media_players": "Altoparlanti/lettori dove suonare l'inno",
+          "song_media_id": "File della canzone (media-source)",
+          "sync_offset": "Compensazione ritardo audio"
+        },
+        "data_description": {
+          "sync_offset": "Se le luci sono in ritardo rispetto alla musica aumenta il valore, se sono in anticipo diminuiscilo."
+        }
+      },
+      "alerts": {
+        "title": "ROMA ROMA ROMA – Avvisi e presenza",
+        "data": {
+          "notify_devices": "Telefoni da avvisare (app Home Assistant)",
+          "notify_minutes": "Avviso: minuti prima della partita",
+          "show_minutes": "Spettacolo: minuti prima della partita",
+          "persons": "Persone di casa",
+          "presence_mode": "Quando avviare lo spettacolo",
+          "serie_a_only": "Solo partite di Serie A"
+        }
+      }
+    },
+    "error": {
+      "no_lights": "Scegli almeno una luce rossa o gialla.",
+      "brightness_range": "La luminosità minima deve essere inferiore alla massima."
+    }
+  },
+  "selector": {
+    "presence_mode": {
+      "options": {
+        "home": "Solo se qualcuno è in casa",
+        "home_or_unknown": "Se qualcuno è in casa o la posizione è sconosciuta",
+        "always": "Sempre"
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "matches": { "name": "Partite" }
+    },
+    "sensor": {
+      "next_match": { "name": "Prossima partita" },
+      "next_show": { "name": "Prossimo spettacolo" }
+    },
+    "switch": {
+      "notify_enabled": { "name": "Avviso sul telefono" },
+      "show_enabled": { "name": "Spettacolo luci e inno" }
+    },
+    "button": {
+      "start_show": { "name": "Avvia spettacolo ora" },
+      "stop_show": { "name": "Ferma spettacolo" },
+      "test_notification": { "name": "Notifica di prova" }
+    }
+  },
+  "services": {
+    "start_show": {
+      "name": "Avvia spettacolo",
+      "description": "Accende le luci giallorosse a tempo con Roma Roma Roma.",
+      "fields": {
+        "play_song": {
+          "name": "Suona la canzone",
+          "description": "Fa partire anche la canzone sui lettori configurati."
+        },
+        "offset": {
+          "name": "Compensazione (s)",
+          "description": "Secondi di canzone già trascorsi quando partono le luci."
+        }
+      }
+    },
+    "stop_show": {
+      "name": "Ferma spettacolo",
+      "description": "Interrompe lo spettacolo di luci in corso."
+    },
+    "test_notification": {
+      "name": "Notifica di prova",
+      "description": "Invia ai telefoni configurati la data della prossima partita."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "ROMA ROMA ROMA non è configurata o non è caricata."
+    }
+  }
+}
