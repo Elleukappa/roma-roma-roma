@@ -36,6 +36,7 @@ CONF_SHOW_MINUTES: Final = "show_minutes"
 CONF_PERSONS: Final = "persons"
 CONF_PRESENCE_MODE: Final = "presence_mode"
 CONF_SERIE_A_ONLY: Final = "serie_a_only"
+CONF_RESTORE_LIGHTS: Final = "restore_lights"
 
 PRESENCE_HOME: Final = "home"
 PRESENCE_HOME_OR_UNKNOWN: Final = "home_or_unknown"
@@ -57,6 +58,7 @@ DEFAULTS: Final = {
     CONF_PERSONS: [],
     CONF_PRESENCE_MODE: PRESENCE_HOME_OR_UNKNOWN,
     CONF_SERIE_A_ONLY: False,
+    CONF_RESTORE_LIGHTS: True,
 }
 
 # Tempi dello spettacolo
@@ -72,3 +74,9 @@ ATTR_PLAY_SONG: Final = "play_song"
 ATTR_OFFSET: Final = "offset"
 
 SIGNAL_STATE_UPDATED: Final = f"{DOMAIN}_state_updated"
+
+# Notifica "inno in corso" con pulsante Ferma (app Home Assistant)
+NOTIFICATION_TAG: Final = DOMAIN
+NOTIFICATION_STOP_ACTION: Final = "ROMA_ROMA_ROMA_STOP"
+EVENT_NOTIFICATION_ACTION: Final = "mobile_app_notification_action"
+RESTORE_TRANSITION: Final = 2

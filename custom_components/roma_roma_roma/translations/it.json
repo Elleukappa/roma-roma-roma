@@ -9,12 +9,14 @@
           "yellow_lights": "Luci gialle",
           "power_entities": "Prese/interruttori da accendere prima",
           "min_brightness": "Luminosità minima",
-          "max_brightness": "Luminosità massima"
+          "max_brightness": "Luminosità massima",
+          "restore_lights": "Al termine rimetti le luci come prima"
         },
         "data_description": {
           "power_entities": "Facoltativo: es. la presa smart che alimenta le lampade.",
           "min_brightness": "Livello delle luci nei momenti più calmi della canzone.",
-          "max_brightness": "Livello sui colpi più forti dei ritornelli."
+          "max_brightness": "Livello sui colpi più forti dei ritornelli.",
+          "restore_lights": "Quando la canzone finisce o fermi lo spettacolo, prese e luci tornano allo stato di prima (accese/spente, luminosità e colore)."
         }
       },
       "media": {
@@ -65,7 +67,11 @@
           "yellow_lights": "Luci gialle",
           "power_entities": "Prese/interruttori da accendere prima",
           "min_brightness": "Luminosità minima",
-          "max_brightness": "Luminosità massima"
+          "max_brightness": "Luminosità massima",
+          "restore_lights": "Al termine rimetti le luci come prima"
+        },
+        "data_description": {
+          "restore_lights": "Quando la canzone finisce o fermi lo spettacolo, prese e luci tornano allo stato di prima (accese/spente, luminosità e colore)."
         }
       },
       "media": {
@@ -108,20 +114,36 @@
   },
   "entity": {
     "calendar": {
-      "matches": { "name": "Partite" }
+      "matches": {
+        "name": "Partite"
+      }
     },
     "sensor": {
-      "next_match": { "name": "Prossima partita" },
-      "next_show": { "name": "Prossimo spettacolo" }
+      "next_match": {
+        "name": "Prossima partita"
+      },
+      "next_show": {
+        "name": "Prossimo spettacolo"
+      }
     },
     "switch": {
-      "notify_enabled": { "name": "Avviso sul telefono" },
-      "show_enabled": { "name": "Spettacolo luci e inno" }
+      "notify_enabled": {
+        "name": "Avviso sul telefono"
+      },
+      "show_enabled": {
+        "name": "Spettacolo luci e inno"
+      }
     },
     "button": {
-      "start_show": { "name": "Avvia spettacolo ora" },
-      "stop_show": { "name": "Ferma spettacolo" },
-      "test_notification": { "name": "Notifica di prova" }
+      "start_show": {
+        "name": "Avvia spettacolo ora"
+      },
+      "stop_show": {
+        "name": "Ferma spettacolo e ripristina"
+      },
+      "test_notification": {
+        "name": "Notifica di prova"
+      }
     }
   },
   "services": {
@@ -141,7 +163,7 @@
     },
     "stop_show": {
       "name": "Ferma spettacolo",
-      "description": "Interrompe lo spettacolo di luci in corso."
+      "description": "Ferma luci e canzone e rimette le luci come prima."
     },
     "test_notification": {
       "name": "Notifica di prova",

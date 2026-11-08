@@ -74,9 +74,27 @@ Tutto si può cambiare dopo da **Configura** sull'integrazione.
 - `roma_roma_roma.stop_show`
 - `roma_roma_roma.test_notification`
 
+## Fermare lo spettacolo e ripristinare le luci
+
+Prima di accendere qualcosa, l'integrazione si "fotografa" lo stato di prese e luci (accese/spente, luminosità, colore). Quando la canzone finisce **o la fermi**, tutto torna esattamente com'era (opzione *"Al termine rimetti le luci come prima"*, attiva di default).
+
+Puoi fermare canzone e luci in qualsiasi momento:
+
+- dal pulsante **⏹ Ferma** nella notifica che arriva sul telefono quando parte l'inno (app Home Assistant, Android e iOS);
+- dal pulsante **Ferma spettacolo e ripristina** del dispositivo ROMA ROMA ROMA;
+- dal servizio `roma_roma_roma.stop_show`, ad esempio con un comando vocale:
+
+  ```yaml
+  triggers:
+    - trigger: conversation
+      command: ["ferma roma", "basta roma"]
+  actions:
+    - action: roma_roma_roma.stop_show
+  ```
+
 ## Come funziona lo spettacolo
 
-La canzone è stata analizzata una volta sola (battute, bassi e volume) e la "mappa" è inclusa nell'integrazione (`beatmap.json`). A ogni battuta le luci rosse e gialle si alternano: chi guida sale in base a bassi e volume, l'altra resta soffusa; sui colpi più forti dei ritornelli si accendono entrambe al massimo. Ogni comando è agganciato all'orario assoluto di inizio canzone, quindi non accumula ritardo. Alla fine le luci restano accese rosse e gialle.
+La canzone è stata analizzata una volta sola (battute, bassi e volume) e la "mappa" è inclusa nell'integrazione (`beatmap.json`). A ogni battuta le luci rosse e gialle si alternano: chi guida sale in base a bassi e volume, l'altra resta soffusa; sui colpi più forti dei ritornelli si accendono entrambe al massimo. Ogni comando è agganciato all'orario assoluto di inizio canzone, quindi non accumula ritardo. Sull'ultimo accordo si accendono entrambe al massimo, poi tornano come prima.
 
 Consigli: lampadine a colori recenti (Matter, Zigbee, Wi-Fi locali) rispondono meglio; le lampadine cloud possono essere lente.
 

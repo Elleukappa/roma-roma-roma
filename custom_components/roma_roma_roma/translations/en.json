@@ -9,12 +9,14 @@
           "yellow_lights": "Yellow lights",
           "power_entities": "Plugs/switches to turn on first",
           "min_brightness": "Minimum brightness",
-          "max_brightness": "Maximum brightness"
+          "max_brightness": "Maximum brightness",
+          "restore_lights": "Restore lights afterwards"
         },
         "data_description": {
           "power_entities": "Optional: e.g. the smart plug powering the lamps.",
           "min_brightness": "Light level in the quietest parts of the song.",
-          "max_brightness": "Light level on the strongest hits of the chorus."
+          "max_brightness": "Light level on the strongest hits of the chorus.",
+          "restore_lights": "When the song ends or you stop the show, plugs and lights go back to how they were before (on/off, brightness and color)."
         }
       },
       "media": {
@@ -65,7 +67,11 @@
           "yellow_lights": "Yellow lights",
           "power_entities": "Plugs/switches to turn on first",
           "min_brightness": "Minimum brightness",
-          "max_brightness": "Maximum brightness"
+          "max_brightness": "Maximum brightness",
+          "restore_lights": "Restore lights afterwards"
+        },
+        "data_description": {
+          "restore_lights": "When the song ends or you stop the show, plugs and lights go back to how they were before (on/off, brightness and color)."
         }
       },
       "media": {
@@ -108,20 +114,36 @@
   },
   "entity": {
     "calendar": {
-      "matches": { "name": "Matches" }
+      "matches": {
+        "name": "Matches"
+      }
     },
     "sensor": {
-      "next_match": { "name": "Next match" },
-      "next_show": { "name": "Next show" }
+      "next_match": {
+        "name": "Next match"
+      },
+      "next_show": {
+        "name": "Next show"
+      }
     },
     "switch": {
-      "notify_enabled": { "name": "Phone alert" },
-      "show_enabled": { "name": "Light show and anthem" }
+      "notify_enabled": {
+        "name": "Phone alert"
+      },
+      "show_enabled": {
+        "name": "Light show and anthem"
+      }
     },
     "button": {
-      "start_show": { "name": "Start show now" },
-      "stop_show": { "name": "Stop show" },
-      "test_notification": { "name": "Test notification" }
+      "start_show": {
+        "name": "Start show now"
+      },
+      "stop_show": {
+        "name": "Stop show and restore"
+      },
+      "test_notification": {
+        "name": "Test notification"
+      }
     }
   },
   "services": {
@@ -141,7 +163,7 @@
     },
     "stop_show": {
       "name": "Stop show",
-      "description": "Stops the running light show."
+      "description": "Stops lights and song and restores the lights as they were."
     },
     "test_notification": {
       "name": "Test notification",

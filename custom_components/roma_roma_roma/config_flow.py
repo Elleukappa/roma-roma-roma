@@ -34,6 +34,7 @@ from .const import (
     CONF_POWER_ENTITIES,
     CONF_PRESENCE_MODE,
     CONF_RED_LIGHTS,
+    CONF_RESTORE_LIGHTS,
     CONF_SERIE_A_ONLY,
     CONF_SHOW_MINUTES,
     CONF_SONG,
@@ -84,6 +85,7 @@ LIGHTS_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_MIN_BRIGHTNESS): _percent(),
         vol.Required(CONF_MAX_BRIGHTNESS): _percent(),
+        vol.Required(CONF_RESTORE_LIGHTS): BooleanSelector(),
     }
 )
 

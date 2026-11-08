@@ -10,13 +10,14 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
@@ -31,18 +32,23 @@ from .const import (
     CONF_POWER_ENTITIES,
     CONF_PRESENCE_MODE,
     CONF_RED_LIGHTS,
+    CONF_RESTORE_LIGHTS,
     CONF_SERIE_A_ONLY,
     CONF_SHOW_MINUTES,
     CONF_SONG,
     CONF_SYNC_OFFSET,
     CONF_YELLOW_LIGHTS,
     DEFAULTS,
+    EVENT_NOTIFICATION_ACTION,
     LIGHT_TRANSITION,
     MAX_LATE_FRAME,
+    NOTIFICATION_STOP_ACTION,
+    NOTIFICATION_TAG,
     PLAYBACK_START_TIMEOUT,
     POWER_ON_TIMEOUT,
     PRESENCE_ALWAYS,
     PRESENCE_HOME_OR_UNKNOWN,
+    RESTORE_TRANSITION,
     SIGNAL_STATE_UPDATED,
     SONG_CONTENT_TYPE,
 )
@@ -68,12 +74,16 @@ TEXTS = {
         "soon": "Tra {minutes} minuti: {match} alle {time}",
         "next": "Prossima partita: {match} il {date} alle {time}",
         "none": "Nessuna partita in calendario.",
+        "playing": "🎵 Roma Roma Roma: inno e luci giallorosse in corso. Tocca ⏹ Ferma per spegnere tutto e rimettere le luci come prima.",
+        "stop": "⏹ Ferma",
     },
     "en": {
         "title": "⚽ Forza Roma!",
         "soon": "In {minutes} minutes: {match} at {time}",
         "next": "Next match: {match} on {date} at {time}",
         "none": "No match in the calendar.",
+        "playing": "🎵 Roma Roma Roma: anthem and red & yellow lights playing. Tap ⏹ Stop to end it and restore your lights.",
+        "stop": "⏹ Stop",
     },
 }
 
@@ -98,21 +108,39 @@ class RomaManager:
         self._unsub_coordinator: Callable[[], None] | None = None
         self._show_task: asyncio.Task | None = None
         self._beatmap: dict[str, Any] = {}
+        # stato delle luci prima dello spettacolo, per rimetterlo alla fine
+        self._snapshot: list[State] | None = None
+        self._keep_snapshot = False
+        self._players_started: list[str] = []
+        self._unsub_action: Callable[[], None] | None = None
 
     # ------------------------------------------------------------------ setup
     async def async_setup(self) -> None:
         """Carica la mappa delle battute e avvia la pianificazione."""
         self._beatmap = await self.hass.async_add_executor_job(load_beatmap)
         self._unsub_coordinator = self.coordinator.async_add_listener(self.async_reschedule)
+        self._unsub_action = self.hass.bus.async_listen(
+            EVENT_NOTIFICATION_ACTION, self._on_notification_action
+        )
         self.async_reschedule()
 
     async def async_unload(self) -> None:
-        """Ferma timer e spettacolo."""
+        """Ferma timer e spettacolo (rimettendo le luci come prima)."""
         self._cancel_timers()
         if self._unsub_coordinator:
             self._unsub_coordinator()
             self._unsub_coordinator = None
+        if self._unsub_action:
+            self._unsub_action()
+            self._unsub_action = None
         await self.async_stop_show()
+
+    @callback
+    def _on_notification_action(self, event: Event) -> None:
+        """Pulsante "Ferma" premuto nella notifica del telefono."""
+        if event.data.get("action") == NOTIFICATION_STOP_ACTION:
+            _LOGGER.info("Spettacolo fermato dalla notifica")
+            self.hass.async_create_task(self.async_stop_show())
 
     @property
     def options(self) -> dict[str, Any]:
@@ -261,13 +289,17 @@ class RomaManager:
                     _LOGGER.warning("Servizio notify.%s non trovato", service)
         return services
 
-    async def _send(self, message: str) -> None:
-        title = self._texts()["title"]
+    async def _send(
+        self, message: str, data: dict[str, Any] | None = None, title: bool = True
+    ) -> None:
+        payload: dict[str, Any] = {"message": message}
+        if title:
+            payload["title"] = self._texts()["title"]
+        if data:
+            payload["data"] = data
         for service in self.notify_services():
             try:
-                await self.hass.services.async_call(
-                    "notify", service, {"title": title, "message": message}, blocking=True
-                )
+                await self.hass.services.async_call("notify", service, payload, blocking=True)
             except Exception:  # noqa: BLE001 - un telefono non deve bloccare gli altri
                 _LOGGER.exception("Invio notifica con notify.%s fallito", service)
 
@@ -299,6 +331,8 @@ class RomaManager:
     def async_start_show(self, play_song: bool = True, offset: float | None = None) -> None:
         """Avvia (o riavvia) lo spettacolo in background."""
         if self.show_running:
+            # riavvio: si conserva lo stato delle luci di prima del primo avvio
+            self._keep_snapshot = True
             self._show_task.cancel()  # type: ignore[union-attr]
         if offset is None:
             offset = float(self.options[CONF_SYNC_OFFSET])
@@ -310,7 +344,7 @@ class RomaManager:
         self._signal()
 
     async def async_stop_show(self) -> None:
-        """Ferma lo spettacolo in corso."""
+        """Ferma spettacolo e canzone, poi rimette le luci come prima."""
         if self.show_running:
             task = self._show_task
             task.cancel()  # type: ignore[union-attr]
@@ -393,7 +427,66 @@ class RomaManager:
         finally:
             unsub()
 
+    # ------------------------------------------------- foto e ripristino luci
+    def _take_snapshot(self) -> None:
+        """Memorizza lo stato di prese e luci prima di toccarle."""
+        if self._snapshot is not None:
+            return  # riavvio: resta la foto del primo avvio
+        opts = self.options
+        ids = [*opts[CONF_POWER_ENTITIES], *opts[CONF_RED_LIGHTS], *opts[CONF_YELLOW_LIGHTS]]
+        self._snapshot = [s for e in dict.fromkeys(ids) if (s := self.hass.states.get(e))]
+
+    async def _restore_lights(self) -> None:
+        """Rimette prese e luci come erano prima dello spettacolo."""
+        snapshot, self._snapshot = self._snapshot, None
+        if not snapshot or not self.options[CONF_RESTORE_LIGHTS]:
+            return
+        power_ids = set(self.options[CONF_POWER_ENTITIES])
+        valid = [s for s in snapshot if s.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)]
+        # prima le luci (mentre sono ancora alimentate), poi le prese
+        lights = [s for s in valid if s.entity_id not in power_ids]
+        power = [s for s in valid if s.entity_id in power_ids]
+        for group in (lights, power):
+            if not group:
+                continue
+            try:
+                await async_reproduce_state(
+                    self.hass, group, reproduce_options={"transition": RESTORE_TRANSITION}
+                )
+            except Exception:  # noqa: BLE001 - il ripristino non deve mai bloccare
+                _LOGGER.warning("Ripristino di %s non riuscito", [s.entity_id for s in group], exc_info=True)
+            if group is lights and power:
+                await asyncio.sleep(RESTORE_TRANSITION + 0.5)
+
+    async def _finish_show(self, stopped: bool) -> None:
+        """Chiude lo spettacolo: ferma la canzone (se interrotto) e ripristina."""
+        if self._keep_snapshot:
+            # lo spettacolo è stato riavviato: il nuovo giro ripristinerà alla fine
+            self._keep_snapshot = False
+            return
+        players, self._players_started = self._players_started, []
+        if stopped and players:
+            try:
+                await self.hass.services.async_call(
+                    "media_player", "media_stop", {"entity_id": players}, blocking=True
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Stop dei lettori non riuscito", exc_info=True)
+        await self._restore_lights()
+        if self.notify_enabled:
+            await self._send("clear_notification", {"tag": NOTIFICATION_TAG}, title=False)
+
     async def _run_show(self, play_song: bool, offset: float) -> None:
+        stopped = False
+        try:
+            await self._show(play_song, offset)
+        except asyncio.CancelledError:
+            stopped = True
+            raise
+        finally:
+            await asyncio.shield(self._finish_show(stopped))
+
+    async def _show(self, play_song: bool, offset: float) -> None:
         opts = self.options
         red: list[str] = opts[CONF_RED_LIGHTS]
         yellow: list[str] = opts[CONF_YELLOW_LIGHTS]
@@ -401,6 +494,7 @@ class RomaManager:
         players: list[str] = opts[CONF_MEDIA_PLAYERS]
         lo, hi = int(opts[CONF_MIN_BRIGHTNESS]), int(opts[CONF_MAX_BRIGHTNESS])
 
+        self._take_snapshot()
         if power:
             await self.hass.services.async_call(
                 "homeassistant", "turn_on", {"entity_id": power}, blocking=True
@@ -414,7 +508,18 @@ class RomaManager:
 
         frames: list[Frame] = build_frames(self._beatmap.get("beats", []), lo, hi)
         if play_song and players:
+            self._players_started = list(players)
             await self._play_song(players, opts[CONF_SONG])
+        if self.notify_enabled:
+            texts = self._texts()
+            await self._send(
+                texts["playing"],
+                {
+                    "tag": NOTIFICATION_TAG,
+                    "sticky": "true",
+                    "actions": [{"action": NOTIFICATION_STOP_ACTION, "title": texts["stop"]}],
+                },
+            )
 
         loop = asyncio.get_running_loop()
         t0 = loop.time() - offset
@@ -427,9 +532,10 @@ class RomaManager:
             await self._lights(red, frame.red, COLOR_RED, blocking=False)
             await self._lights(yellow, frame.yellow, COLOR_YELLOW, blocking=False)
 
-        await asyncio.sleep(1)
+        # ultimo accordo: entrambe al massimo per un attimo, poi _finish_show ripristina
         await self._lights(red, hi, COLOR_RED, blocking=False)
         await self._lights(yellow, hi, COLOR_YELLOW, blocking=False)
+        await asyncio.sleep(2)
 
     # ------------------------------------------------------------------ utils
     @callback
